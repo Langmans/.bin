@@ -1,0 +1,2 @@
+#!/bin/bash
+osascript -e 'tell application "System Events" to if ((name of processes) contains "iTunes") then do shell script ("osascript -e " & quoted form of ("tell application \"iTunes\" to if player state is playing then lyrics of current track"))'

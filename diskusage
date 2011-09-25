@@ -1,0 +1,149 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+/**
+ * options
+ */
+
+$firstCol = 26; // disk0s2 (bla)
+$secondCol = 15; // 44Gb / 100Gb
+$thirdCol = 18; // (56Gb free)
+$sign = '=';
+$emptySign = ' ';
+$signs = 20;
+
+######################################################################
+## Do not modify below this line unless you know what you're doing! ##
+######################################################################
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+$lines = trim(`df -ah`);
+
+$colors = new Colors;
+
+$lines = preg_replace('#(\d+)([A-Z])i#m', "\033[0;36m\\1\033[0m\\2B", $lines);
+$lines = explode(PHP_EOL, $lines);
+$lines = preg_grep('/disk/', $lines);
+
+//var_dump($lines);
+
+foreach($lines as $disk)
+{
+	list($link, $size, $used, $free, $percent, $mount) = preg_split('#\s+#', $disk);
+	list($link, $name) = getDiskNameByLink($link);
+	if($link && $name)
+	{
+		$bar = $colors->color(str_repeat($sign, round($percent / 100 * $signs)), 'cyan');
+				
+		echo str_pad($percent, 4, ' ', STR_PAD_LEFT), ' [', str_pad($bar, $signs + 11, $emptySign), '] ';
+		
+		echo str_pad($link.' ('.$colors->color($name, 'cyan').')', $firstCol);
+		
+		echo ': ';
+	
+		echo str_pad($used.' / '.$size, $secondCol, ' ', STR_PAD_BOTH);
+		
+		echo str_pad(' ('. $free, $thirdCol, ' ', STR_PAD_LEFT), $colors->color(' free', 'cyan'), ')';
+		
+		echo PHP_EOL;
+	}
+}
+
+class Colors {
+	private $foreground_colors = array();
+	private $background_colors = array();
+
+	public function __construct() {
+		// Set up shell colors
+		$this->foreground_colors['black'] = '0;30';
+		$this->foreground_colors['dark_gray'] = '1;30';
+		$this->foreground_colors['blue'] = '0;34';
+		$this->foreground_colors['light_blue'] = '1;34';
+		$this->foreground_colors['green'] = '0;32';
+		$this->foreground_colors['light_green'] = '1;32';
+		$this->foreground_colors['cyan'] = '0;36';
+		$this->foreground_colors['light_cyan'] = '1;36';
+		$this->foreground_colors['red'] = '0;31';
+		$this->foreground_colors['light_red'] = '1;31';
+		$this->foreground_colors['purple'] = '0;35';
+		$this->foreground_colors['light_purple'] = '1;35';
+		$this->foreground_colors['brown'] = '0;33';
+		$this->foreground_colors['yellow'] = '1;33';
+		$this->foreground_colors['light_gray'] = '0;37';
+		$this->foreground_colors['white'] = '1;37';
+
+		$this->background_colors['black'] = '40';
+		$this->background_colors['red'] = '41';
+		$this->background_colors['green'] = '42';
+		$this->background_colors['yellow'] = '43';
+		$this->background_colors['blue'] = '44';
+		$this->background_colors['magenta'] = '45';
+		$this->background_colors['cyan'] = '46';
+		$this->background_colors['light_gray'] = '47';
+	}
+
+	// Returns colored string
+	public function color($string, $foreground_color = null, $background_color = null) {
+		$colored_string = "";
+
+		// Check if given foreground color found
+		if (isset($this->foreground_colors[$foreground_color])) {
+			$colored_string .= "\033[" . $this->foreground_colors[$foreground_color] . "m";
+		}
+		// Check if given background color found
+		if (isset($this->background_colors[$background_color])) {
+			$colored_string .= "\033[" . $this->background_colors[$background_color] . "m";
+		}
+
+		// Add string and end coloring
+		$colored_string .=  $string . "\033[0m";
+
+		return $colored_string;
+	}
+
+	// Returns all foreground color names
+	public function getForegroundColors() {
+		return array_keys($this->foreground_colors);
+	}
+
+	// Returns all background color names
+	public function getBackgroundColors() {
+		return array_keys($this->background_colors);
+	}
+}
+
+function getDiskNameByLink($link)
+{
+	static $info;
+	
+	$parts = explode('/', strtolower($link));
+	$disk = end($parts);
+	
+	if(strpos($disk, 'disk') !== 0)
+	{
+		die('ERROR');
+	}	
+
+	if(!$info)
+	{
+		$tmp = `diskutil list | awk '{print $3 "|" $6}' | grep disk`;
+		$tmp = explode("\n",trim($tmp)); 
+		
+		foreach($tmp as $line)
+		{
+			list($v, $k) = explode('|', $line);
+			$info[$k] = $v;
+		}
+	}
+	
+	return array($disk, $info[$disk]);	
+}

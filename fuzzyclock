@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+hour, minute = Time.now.strftime('%I').to_i, Time.now.min
+words = %w{ nil one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour twentyfive twentysix twentyseven twentyeight twentynine }
+
+if(minute > 30) then
+	suffix = 'to'
+	minute = 30 - (minute - 30)
+	hour = hour + 1
+else
+	suffix = 'past'
+end
+
+minute_str = case (minute)
+  when 0 then 'o-clock'
+  when 15 then 'quarter'
+  when 1..29 then "#{words[minute]}"
+  when 30 then 'half'
+end
+
+if(hour > 12) then 
+	hour = hour - 12 
+end
+
+if (minute == 0) then
+	print "\t #{words[hour]}    #{minute_str}\n"
+else
+	print "\t #{minute_str}  #{suffix}  #{words[hour]}\n"
+end
+
+# old version
+#minute_str = case minute
+#  when 0 then 'o-clock'
+#  when 1..9 then "o-#{ones[minute]}"
+#  when 10..19 then teens[minute - 10]
+#  else tens[minute.to_s[0,1].to_i] + (minute.to_s[1,1].to_i == 0 ? '' : "-#{ones[minute.to_s[1,1].to_i]}")
+#end

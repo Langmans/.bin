@@ -1,0 +1,30 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+$line = `curl -s http://www.randomfunnyquotes.com/random?s=w | grep 'class="oldlink"' | head -n 1 | sed 's/<[^>]*>//g'`;
+$author = null;
+
+if(FALSE !== $pos = strpos($line, '---')) {
+	list($line, $author) = explode('---', $line);
+}
+
+$line = preg_replace(array(
+	'#[\.]{3,}#',
+	'#\s\s+#', 
+	'#^\s+#',
+	'#\s+$#',
+	
+), array(
+	'… ', 
+	' ', 
+	'“', 
+	'”',
+	
+), " $line ");
+
+echo $line, ' - ', "\033[0;36m", $author, "\033[0m";

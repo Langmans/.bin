@@ -1,0 +1,29 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+echo 'OPGESTART:', RelativeTime(`sysctl kern.boottime | awk '{print $5}' | sed "s/,//"`);
+
+function RelativeTime($timestamp, $colors = TRUE){
+    $difference = time() - $timestamp;
+    $periods = array("seconde", "minuut", "uur", "dag", "week", "maand", "jaar", "decennium");
+    $periods_mv = array("seconden", "minuten", "uur", "dagen", "weken", "maanden", "jaar", "decennia");
+    $lengths = array("60","60","24","7","4.35","12","10");
+
+    if ($difference > 0) {
+        $ending = "geleden";
+    } else {
+        $difference = -$difference;
+        $ending = "te gaan";
+    }       
+    for($j = 0; $difference >= $lengths[$j]; $j++) $difference /= $lengths[$j];
+    $difference = round($difference);
+    if($difference != 1) $periods[$j] = $periods_mv[$j];
+
+	$text = "\033[0;36m".$difference." ".strtoupper($periods[$j])."\033[0m ".strtoupper($ending);
+    return $text;
+}

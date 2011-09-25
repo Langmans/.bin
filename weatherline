@@ -1,0 +1,97 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+$file = explode("\n", `curl --silent "http://www.accuweather.com/nl/nl/utrecht/amersfoort/quick-look.aspx"`);
+if(!$file)
+{
+	echo 'Unable to get accuweather page.'; return false;
+}
+
+$cond = $zicht = $lucht = $druk = $wind = $temp = $zon = $maan = null;
+
+if($lines = preg_grep('/ctl00_cphContent_lblCurrentText/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$cond = strtoupper($result[1]);
+	}
+}
+
+if($lines = preg_grep('/ctl00_cphContent_lblVisibilityValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$zicht = strtoupper($result[1]);
+	}
+}
+
+
+if($lines = preg_grep('/ctl00_cphContent_lblSunRiseValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$zon = strtoupper($result[1]);
+	}
+}
+
+if($lines = preg_grep('/ctl00_cphContent_lblSunSetValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$maan = strtoupper($result[1]);
+	}
+}
+
+if($lines = preg_grep('/ctl00_cphContent_lblPressureValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$druk = strtoupper($result[1]);
+	}
+}
+
+//var_dump($lines);
+
+if($lines = preg_grep('/ctl00_cphContent_lblHumidityValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$lucht = strtoupper($result[1]);
+	}
+}
+
+if($lines = preg_grep('/ctl00_cphContent_lblWindsValue/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$wind = str_replace(array('S', 'E'), array('Z', 'O'), strtoupper($result[1]));
+	}
+}
+
+if($lines = preg_grep('/ctl00_cphContent_lblCurrentTemp/', $file))
+{
+	$line = array_shift($lines);
+	if(preg_match('/>([^>]+)</i', $line, $result))
+	{
+		$temp = "\033[0;36m".str_replace('&DEG;C', "\033[0m°C", strtoupper($result[1]));
+	}
+}
+
+
+
+$output = `echo "$temp, \033[0;36m$cond\033[0m, ZICHT:\033[0;36m$zicht\033[0m, LICHT:\033[0;36m$zon\033[0m TOT \033[0;36m$maan\033[0m";
+echo "DRUK:\033[0;36m$druk\033[0m, VOCHTIGHEID:\033[0;36m$lucht\033[0m, WIND:\033[0;36m$wind\033[0m"`;
+
+echo $output;

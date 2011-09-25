@@ -1,0 +1,63 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+$hour = (int) strftime("%I");
+$minute = (int) strftime("%M");
+
+$words = explode(',', 'null,een,twee,drie,vier,vijf,zes,zeven,acht,negen,tien,elf,twaalf,dertien,veertien');
+
+foreach($words as $k => $v) {
+	$words[$k] = "\033[0;36m".strtoupper($v)."\033[0m";
+}
+
+// intervals of 5 minutes
+$minute = (int) round($minute/5)*5;
+
+if($minute == 60) {
+	$hour++;
+}
+
+if ($hour > 12)
+{
+	$hour = $hour - 12;
+}
+
+ob_start();
+
+switch($minute) 
+{
+	case 60:
+	case 0:
+		echo $words[$hour == 0 ? 12 : $hour], strtoupper(' uur'), PHP_EOL;
+		break;
+	case 5:
+	case 10:
+		echo $words[$minute], strtoupper(' over '), $words[$hour == 0 ? 12 : $hour], PHP_EOL;
+		break;
+	case 15:
+		echo strtoupper('kwart over '), $words[$hour == 0 ? 12 : $hour], PHP_EOL;
+		break;
+	case 20:
+	case 25:
+		echo $words[30 - $minute], strtoupper(' voor half '), $words[$hour == 12 ? 1 : $hour + 1], PHP_EOL;
+		break;
+	case 30:
+		echo strtoupper('half '), $words[$hour == 12 ? 1 : $hour + 1], PHP_EOL;
+		break;
+	case 35:
+	case 40:
+		echo $words[$minute - 30], strtoupper(' over half '), $words[$hour == 12 ? 1 : $hour + 1], PHP_EOL;
+		break;
+	case 45:
+		echo strtoupper('kwart voor '), $words[$hour == 12 ? 1 : $hour + 1], PHP_EOL;
+		break;
+	case 50:
+	case 55:
+		echo $words[60 - $minute], strtoupper(' voor '), $words[$hour == 12 ? 1 : $hour + 1], PHP_EOL;
+		break;
+}

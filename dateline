@@ -1,0 +1,20 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+setlocale(LC_ALL, 'nl_NL');
+
+$color_open = "\033[0;36m";
+$color_close = "\033[0m";
+
+$day = strtoupper(strftime('%A'));
+$num = $color_open.(int)strftime('%e').$color_close;
+$month = strtoupper(strftime('%B'));
+$year = $color_open.strftime('%Y').$color_close;
+$tz = strtoupper(strftime('%Z'));
+
+echo "$day $num $month $year $tz", PHP_EOL;

@@ -1,2 +1,19 @@
-#!/bin/bash
-osascript -e 'tell application "System Events" to if ((name of processes) contains "iTunes") then do shell script ("osascript -e " & quoted form of ("tell application \"iTunes\" to if player state is playing then lyrics of current track"))'
+#!/usr/bin/osascript
+do shell script "touch ~/iTunesLyrics.txt"
+
+set lyricsFile to (((path to home folder) as text) & "iTunesLyrics.txt") as alias
+open for access lyricsFile with write permission
+set eof of lyricsFile to 0
+
+
+tell application "System Events"
+	set powerCheck to ((application processes whose (name is equal to "iTunes")) count)
+	if powerCheck = 0 then
+		write "" to lyricsFile
+	else
+		tell application "iTunes" to set currentLyrics to the lyrics of the current track
+		write currentLyrics to lyricsFile
+	end if
+end tell
+
+close access lyricsFile

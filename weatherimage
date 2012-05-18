@@ -8,14 +8,14 @@ if (PHP_SAPI !== 'cli')
 	die('this is a CLI script.');
 }
 
-$file = explode("\n", `curl --silent "http://weather.yahoo.com/netherlands/utrecht/amersfoort-727211/"`);
+$file = file("http://weather.yahoo.com/netherlands/utrecht/utrecht-12592256/");
 if(!$file)
 {
 	echo 'Unable to get yahoo page.';
 	return false;
 }
 
-if(!$lines = $lines = preg_grep('/forecast-icon/', $file)) {
+if(!$lines = $lines = preg_grep('/current-weather/', $file)) {
 	echo 'Couldn\'t find forecast image in html file.';
 	return false;
 }
@@ -26,7 +26,6 @@ if(!preg_match('/background:url\(\'(.*?)\'\)/i', $line, $result)) {
 	echo 'Could not extract url for image.';
 	return false;
 }
-
 
 $src = $result[1];
 if(!file_put_contents(dirname(__FILE__).'/weatherimage.png', file_get_contents($src)))

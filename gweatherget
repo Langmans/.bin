@@ -1,0 +1,23 @@
+#!/usr/bin/php
+<?php
+
+$config = array();
+
+// The city where you live.
+$config['city'] = 'Leusden';
+
+// The language you desire. 
+// (ISO 3166-1 code: http://en.wikipedia.org/wiki/ISO_3166-1)
+$config['lang'] = 'nl';
+
+// The type of degrees.
+// Google weather supports 'f'(Fahrenheit) or 'c'(Celcius)
+$config['degrees'] = 'c';		
+					
+
+/*****************************************************************************
+	End of config
+*****************************************************************************/
+
+
+echo 'hello world';

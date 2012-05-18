@@ -6,92 +6,122 @@ if (PHP_SAPI !== 'cli')
 	die('this is a CLI script.');
 }
 
-$file = explode("\n", `curl --silent "http://www.accuweather.com/nl/nl/utrecht/amersfoort/quick-look.aspx"`);
-if(!$file)
-{
-	echo 'Unable to get accuweather page.'; return false;
+//http://www.google.com/ig/api?weather=leusden
+$curl = curl_init();
+if(!$curl) die("can't open curl handle");
+
+$ehader = array();
+$header[0] = "Accept: text/xml,application/xml,application/xhtml+xml,"; 
+$header[0] .= "text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"; 
+$header[] = "Cache-Control: max-age=0"; 
+$header[] = "Connection: keep-alive"; 
+$header[] = "Keep-Alive: 300"; 
+$header[] = "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3"; 
+$header[] = "Accept-Language: nl-NL,nl;q=0.8,en-US;q=0.6,en;q=0.4"; 
+$header[] = "Pragma: "; // browsers keep this blank.
+
+
+curl_setopt_array($curl, array(
+	CURLOPT_URL => "http://www.google.com/ig/api?weather=leusden",
+	CURLOPT_USERAGENT => 'Googlebot/2.1 (+http://www.google.com/bot.html)',
+
+	CURLOPT_HTTPHEADER => $header,
+	CURLOPT_REFERER =>'http://www.google.com',
+	CURLOPT_ENCODING => 'gzip,deflate',
+
+	CURLOPT_AUTOREFERER => true,
+	CURLOPT_CRLF => true,
+	CURLOPT_FILETIME => true,
+	CURLOPT_FOLLOWLOCATION => true,
+	CURLOPT_MAXREDIRS => 5,
+	CURLOPT_FORBID_REUSE => true,
+	CURLOPT_HEADER => false,
+	CURLOPT_RETURNTRANSFER => true,
+	
+	CURLOPT_TIMEOUT => 20,
+));
+
+$file =curl_exec($curl);
+
+$curl_errno = curl_errno($curl);
+$curl_error = curl_error($curl);
+curl_close($curl);
+
+if ($curl_errno > 0) {
+	echo "cURL Error ($curl_errno): $curl_error\n";
+	die;
 }
 
-$cond = $zicht = $lucht = $druk = $wind = $temp = $zon = $maan = null;
+if(!$file) return;
 
-if($lines = preg_grep('/ctl00_cphContent_lblCurrentText/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$cond = strtoupper($result[1]);
-	}
-}
+$xml = simplexml_load_string($file);
+if(!$xml) return;
 
-if($lines = preg_grep('/ctl00_cphContent_lblVisibilityValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$zicht = strtoupper($result[1]);
-	}
-}
+$information =		$xml->xpath("/xml_api_reply/weather/forecast_information");
+$current =			$xml->xpath("/xml_api_reply/weather/current_conditions");
+$forecast_list =	$xml->xpath("/xml_api_reply/weather/forecast_conditions");
 
-
-if($lines = preg_grep('/ctl00_cphContent_lblSunRiseValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$zon = strtoupper($result[1]);
-	}
-}
-
-if($lines = preg_grep('/ctl00_cphContent_lblSunSetValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$maan = strtoupper($result[1]);
-	}
-}
-
-if($lines = preg_grep('/ctl00_cphContent_lblPressureValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$druk = strtoupper($result[1]);
-	}
-}
-
-//var_dump($lines);
-
-if($lines = preg_grep('/ctl00_cphContent_lblHumidityValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$lucht = strtoupper($result[1]);
-	}
-}
-
-if($lines = preg_grep('/ctl00_cphContent_lblWindsValue/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$wind = str_replace(array('S', 'E'), array('Z', 'O'), strtoupper($result[1]));
-	}
-}
-
-if($lines = preg_grep('/ctl00_cphContent_lblCurrentTemp/', $file))
-{
-	$line = array_shift($lines);
-	if(preg_match('/>([^>]+)</i', $line, $result))
-	{
-		$temp = "\033[0;36m".str_replace('&DEG;C', "\033[0m°C", strtoupper($result[1]));
-	}
-}
-
-
+/*
 
 $output = `echo "$temp, \033[0;36m$cond\033[0m, ZICHT:\033[0;36m$zicht\033[0m, LICHT:\033[0;36m$zon\033[0m TOT \033[0;36m$maan\033[0m";
 echo "DRUK:\033[0;36m$druk\033[0m, VOCHTIGHEID:\033[0;36m$lucht\033[0m, WIND:\033[0;36m$wind\033[0m"`;
 
-echo $output;
+*/
+
+//echo xmlpp($file);
+
+echo 'Nu: ';
+echo $current[0]->temp_c['data'], '°C, ', $current[0]->condition['data'],', ', $current[0]->humidity['data'], PHP_EOL;
+
+foreach($forecast_list as $forecast) {
+	echo $forecast->day_of_week['data'], ': ';
+	echo $forecast->low['data'], '°C / ';
+	echo $forecast->high['data'], '°C, ';
+	echo $forecast->condition['data'], '.', PHP_EOL;
+}
+
+
+if (!function_exists('curl_setopt_array')) {
+   function curl_setopt_array(&$ch, $curl_options)
+   {
+       foreach ($curl_options as $option => $value) {
+           if (!curl_setopt($ch, $option, $value)) {
+               return false;
+           } 
+       }
+       return true;
+   }
+}
+
+function xmlpp($xml, $html_output=false) {
+    $xml_obj = new SimpleXMLElement($xml);
+    $level = 4;
+    $indent = 0; // current indentation level
+    $pretty = array();
+    
+    // get an array containing each XML element
+    $xml = explode("\n", preg_replace('/>\s*</', ">\n<", $xml_obj->asXML()));
+
+    // shift off opening XML tag if present
+    if (count($xml) && preg_match('/^<\?\s*xml/', $xml[0])) {
+      $pretty[] = array_shift($xml);
+    }
+
+    foreach ($xml as $el) {
+      if (preg_match('/^<([\w])+[^>\/]*>$/U', $el)) {
+          // opening tag, increase indent
+          $pretty[] = str_repeat(' ', $indent) . $el;
+          $indent += $level;
+      } else {
+        if (preg_match('/^<\/.+>$/', $el)) {            
+          $indent -= $level;  // closing tag, decrease indent
+        }
+        if ($indent < 0) {
+          $indent += $level;
+        }
+        $pretty[] = str_repeat(' ', $indent) . $el;
+      }
+    }   
+    $xml = implode("\n", $pretty);   
+    return ($html_output) ? htmlentities($xml) : $xml;
+}

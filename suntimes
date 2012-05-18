@@ -1,0 +1,18 @@
+#!/usr/bin/php
+<?php
+
+if (PHP_SAPI !== 'cli')
+{
+	die('this is a CLI script.');
+}
+
+setlocale(LC_ALL, 'nl_NL');
+
+$lon = 5.430964;
+$lat = 52.128930;
+
+$info = date_sun_info(strtotime('now'), $lat, $lon);
+foreach($info as $k => $v) {
+	$info[$k] = strftime('%c', $v);
+}
+print_r($info);

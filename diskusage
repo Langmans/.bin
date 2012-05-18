@@ -144,6 +144,5 @@ function getDiskNameByLink($link)
 			$info[$k] = $v;
 		}
 	}
-	
-	return array($disk, $info[$disk]);	
+	if(isset($info[$disk])) return array($disk, $info[$disk]);	
 }

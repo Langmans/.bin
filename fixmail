@@ -1,0 +1,17 @@
+#!/usr/bin/osascript
+
+tell application "System Events"
+	set isMailRunning to (count of (every process whose bundle identifier is "com.apple.mail")) > 0
+end tell
+if isMailRunning then
+	set minimized to miniaturized of windows of application "Mail"
+	
+	quit application "Mail" saving yes
+	say "Mail restarting!"
+	if minimized then
+		tell application "Mail" to launch
+	else
+		tell application "Mail" to activate
+	end if
+	
+end if

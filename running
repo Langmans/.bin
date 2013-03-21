@@ -24,6 +24,6 @@ function RelativeTime($timestamp, $colors = TRUE){
     $difference = round($difference);
     if($difference != 1) $periods[$j] = $periods_mv[$j];
 
-	$text = "\033[0;36m".$difference." ".strtoupper($periods[$j])."\033[0m ".strtoupper($ending);
+	$text = "\033[0;36m".$difference." ".strtolower($periods[$j])."\033[0m ".strtolower($ending);
     return $text;
 }

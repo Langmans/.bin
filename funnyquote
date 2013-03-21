@@ -6,8 +6,11 @@ if (PHP_SAPI !== 'cli')
 	die('this is a CLI script.');
 }
 
-$line = `curl -s http://www.randomfunnyquotes.com/random?s=w | grep 'class="oldlink"' | head -n 1 | sed 's/<[^>]*>//g'`;
+$line = `curl -s http://www.randomfunnyquotes.com/random | grep 'class="oldlink"' | head -n 1 | sed 's/<[^>]*>//g'`;
 $author = null;
+
+$line = html_entity_decode($line);
+
 
 if(FALSE !== $pos = strpos($line, '---')) {
 	list($line, $author) = explode('---', $line);
@@ -22,8 +25,8 @@ $line = preg_replace(array(
 ), array(
 	'… ', 
 	' ', 
-	'“', 
-	'”',
+	'', 
+	'',
 	
 ), " $line ");
 

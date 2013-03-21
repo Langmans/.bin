@@ -30,29 +30,63 @@ $lines = trim(`df -ah`);
 
 $colors = new Colors;
 
-$lines = preg_replace('#(\d+)([A-Z])i#m', "\033[0;36m\\1\033[0m\\2B", $lines);
+//$lines = preg_replace('#(\d+)([A-Z])i#m', "\033[0m\\1\033[0;36m\\2b\033[0m", $lines);
 $lines = explode(PHP_EOL, $lines);
-$lines = preg_grep('/disk/', $lines);
 
-//var_dump($lines);
+$lines = preg_grep('#/dev/#', $lines);
+
+$opt = getopt('m:a:');
+
+if(!isset($opt['m'])) {
+	die('-m required (either disknames, bar, barbg)'.PHP_EOL);
+}
+
+$range = array_merge(range('a', 'z'), range('A', 'Y'));
 
 foreach($lines as $disk)
 {
-	list($link, $size, $used, $free, $percent, $mount) = preg_split('#\s+#', $disk);
-	list($link, $name) = getDiskNameByLink($link);
-	if($link && $name)
-	{
-		$bar = $colors->color(str_repeat($sign, round($percent / 100 * $signs)), 'cyan');
-				
-		echo str_pad($percent, 4, ' ', STR_PAD_LEFT), ' [', str_pad($bar, $signs + 11, $emptySign), '] ';
-		
-		echo str_pad($link.' ('.$colors->color($name, 'cyan').')', $firstCol);
-		
-		echo ': ';
-	
-		echo str_pad($used.' / '.$size, $secondCol, ' ', STR_PAD_BOTH);
-		
-		echo str_pad(' ('. $free, $thirdCol, ' ', STR_PAD_LEFT), $colors->color(' free', 'cyan'), ')';
+	$info = preg_split('#\s+#', $disk);
+	list($link, $size, $used, $free, $percent, $iused, $ifree, $ipercent, $mount) = $info;
+
+	if(preg_match('#/Volumes/(.*)$#', $disk, $matches)) {
+		$name = $matches[1];
+		$mount = $matches[0];
+		$info[count($info)-1] = $mount;
+	} else {
+		list($link, $name) = getDiskNameByLink($link);
+	}
+
+	if($link && $name) {
+
+		switch($opt['m']) {
+			case 'disknames':
+				echo $name . ':';
+				break;
+			case 'barbg':
+				echo 'Y';
+				break;
+			case 'bar':
+				echo $range[$percent / 2];
+				break;
+			case 'a':
+			break;
+			default:
+				die('unknown -m parameter: '.$opt['m'].PHP_EOL);
+				break;
+		}
+
+		$info = compact(explode(' ', 'link size used free percent iused ifree ipercent mount'));
+
+		if(isset($opt['a'])) {
+			$replacements = array(
+				'<newline>' => "\n", 
+				'<tab>' => "\t"
+			);
+			foreach($info as $k => $v) {
+				$replacements['<'.$k.'>'] = $v;
+			}
+			echo str_replace(array_keys($replacements), array_values($replacements), $opt['a']);
+		}
 		
 		echo PHP_EOL;
 	}
